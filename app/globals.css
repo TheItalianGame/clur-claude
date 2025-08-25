@@ -1,0 +1,77 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  @apply bg-white dark:bg-gray-900;
+}
+
+/* Remove automatic dark mode overrides - let components handle their own styling */
+
+/* Form inputs */
+input, select, textarea {
+  @apply text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600;
+}
+
+input:focus, select:focus, textarea:focus {
+  @apply ring-blue-500 dark:ring-blue-400 border-blue-500 dark:border-blue-400;
+}
+
+/* Tables */
+table {
+  @apply text-gray-900 dark:text-gray-100;
+}
+
+th {
+  @apply text-gray-700 dark:text-gray-300;
+}
+
+td {
+  @apply text-gray-900 dark:text-gray-100;
+}
+
+/* Date picker styling for dark mode */
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"],
+input[type="month"],
+input[type="week"] {
+  @apply bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100;
+  color-scheme: light dark;
+}
+
+.dark input[type="date"]::-webkit-calendar-picker-indicator,
+.dark input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+.dark input[type="time"]::-webkit-calendar-picker-indicator,
+.dark input[type="month"]::-webkit-calendar-picker-indicator,
+.dark input[type="week"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+/* Custom scrollbar for dark mode */
+.dark ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  @apply bg-gray-800;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  @apply bg-gray-600 rounded;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-500;
+}

@@ -45,6 +45,9 @@ export interface FieldDefinition {
   validation_rules?: string;
   order_index: number;
   show_in_employee_calendar?: boolean;
+  show_on_calendar?: boolean;
+  read_only?: boolean;
+  is_system?: boolean;
   created_at: string;
 }
 
@@ -138,8 +141,11 @@ export interface DynamicRecord {
 
 export interface CalendarEvent {
   id: string;
+  recordId?: string;
   title: string;
   date: Date;
+  dateField?: string;
+  dateFieldDisplay?: string;
   color: string;
   recordType: string;
   recordTypeDisplay: string;

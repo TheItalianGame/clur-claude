@@ -43,6 +43,33 @@ export async function POST(request: NextRequest) {
       createdFields.push({ ...field, id: fieldId, order_index: index });
     });
     
+    // Always add created_at and updated_at fields for new record types
+    fieldDefinitionQueries.create({
+      id: `${recordTypeId}-created-at`,
+      record_type_id: recordTypeId,
+      field_name: 'created_at',
+      display_name: 'Created Date',
+      field_type: 'datetime',
+      is_required: false,
+      is_system: true,
+      read_only: true,
+      order_index: 9999,
+      show_on_calendar: false
+    });
+    
+    fieldDefinitionQueries.create({
+      id: `${recordTypeId}-updated-at`,
+      record_type_id: recordTypeId,
+      field_name: 'updated_at',
+      display_name: 'Last Updated',
+      field_type: 'datetime',
+      is_required: false,
+      is_system: true,
+      read_only: true,
+      order_index: 10000,
+      show_on_calendar: false
+    });
+    
     // Generate default form layout based on fields
     const defaultLayout = formLayout || generateDefaultFormLayout(createdFields);
     

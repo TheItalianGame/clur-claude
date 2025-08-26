@@ -232,11 +232,11 @@ export default function RecordListPage() {
           </div>
         ) : (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-            <table className="w-full">
+            <table className="w-full bg-white dark:bg-gray-800">
               <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Name / Title
+                    ID
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Details
@@ -249,9 +249,9 @@ export default function RecordListPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
                 {filteredRecords.map((record) => (
-                  <tr key={record.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors">
+                  <tr key={record.id} className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                     <td className="px-6 py-4">
                       <div>
                         <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
@@ -276,30 +276,30 @@ export default function RecordListPage() {
                       <div className="flex items-center justify-end gap-2">
                         <Link
                           href={`/records/${recordTypeName}/${record.id}`}
-                          className="p-1 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                          className="p-1 text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
                           title="View"
                         >
-                          <Eye className="w-4 h-4" />
+                          Edit
                         </Link>
                         
                         {recordType.allow_edit && (
                           <Link
                             href={`/records/${recordTypeName}/${record.id}/edit`}
-                            className="p-1 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                            className="p-1 text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
                             title="Edit"
                           >
-                            <Edit2 className="w-4 h-4" />
+                            Edit
                           </Link>
                         )}
                         
                         {recordType.allow_delete && (
-                          <button
-                            onClick={() => handleDelete(record.id)}
-                            className="p-1 hover:bg-red-100 dark:hover:bg-red-900 text-red-600 rounded transition-colors"
+                          <Link
+                            href={`/records/${recordTypeName}/${record.id}/edit`}
+                            className="p-1 text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
                             title="Delete"
                           >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                            Edit
+                          </Link>
                         )}
                       </div>
                     </td>

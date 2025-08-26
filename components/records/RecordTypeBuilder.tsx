@@ -12,6 +12,7 @@ interface RecordTypeBuilderProps {
 interface ExtendedFieldDefinition extends Partial<FieldDefinition> {
   related_record_type?: string;
   show_in_employee_calendar?: boolean;
+  show_on_calendar?: boolean;
 }
 
 export default function RecordTypeBuilder({ onSave, onCancel }: RecordTypeBuilderProps) {
@@ -30,7 +31,8 @@ export default function RecordTypeBuilder({ onSave, onCancel }: RecordTypeBuilde
       is_required: false,
       default_value: '',
       related_record_type: '',
-      show_in_employee_calendar: false
+      show_in_employee_calendar: false,
+      show_on_calendar: false
     }
   ]);
   const [dateField, setDateField] = useState('');
@@ -113,7 +115,8 @@ export default function RecordTypeBuilder({ onSave, onCancel }: RecordTypeBuilde
       is_required: false,
       default_value: '',
       related_record_type: '',
-      show_in_employee_calendar: false
+      show_in_employee_calendar: false,
+      show_on_calendar: false
     }]);
   };
 
@@ -153,7 +156,8 @@ export default function RecordTypeBuilder({ onSave, onCancel }: RecordTypeBuilde
           ...field,
           field_type: fieldType,
           options: JSON.stringify({ record_type: field.related_record_type }),
-          show_in_employee_calendar: field.show_in_employee_calendar || false
+          show_in_employee_calendar: field.show_in_employee_calendar || false,
+          show_on_calendar: field.show_on_calendar || false
         };
       }
       // For select and multiselect fields, convert comma-separated options to JSON array
@@ -161,10 +165,14 @@ export default function RecordTypeBuilder({ onSave, onCancel }: RecordTypeBuilde
         const optionsArray = field.options.split(',').map(opt => opt.trim()).filter(opt => opt);
         return {
           ...field,
-          options: JSON.stringify(optionsArray)
+          options: JSON.stringify(optionsArray),
+          show_on_calendar: field.show_on_calendar || false
         };
       }
-      return field;
+      return {
+        ...field,
+        show_on_calendar: field.show_on_calendar || false
+      };
     });
 
     try {
@@ -400,6 +408,25 @@ export default function RecordTypeBuilder({ onSave, onCancel }: RecordTypeBuilde
                       placeholder="Option1, Option2, Option3"
                       className="w-full max-w-md px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
+                  </div>
+                )}
+                {/* Show calendar option for date/datetime fields */}
+                {(field.field_type === 'date' || field.field_type === 'datetime') && (
+                  <div className="mt-3 pl-3">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={field.show_on_calendar || false}
+                        onChange={(e) => updateField(index, { show_on_calendar: e.target.checked })}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm dark:text-gray-300">
+                        Show on Calendar
+                      </span>
+                    </label>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6">
+                      Display records on the calendar using this date field
+                    </p>
                   </div>
                 )}
               </div>

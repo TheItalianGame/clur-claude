@@ -86,7 +86,7 @@ export default function Home() {
           {sidebarOpen && <h1 className="text-xl font-bold text-gray-800 dark:text-gray-200">CLUR</h1>}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-colors"
           >
             {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -96,7 +96,7 @@ export default function Home() {
           <button
             onClick={() => setView('calendar')}
             className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-              view === 'calendar' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'
+              view === 'calendar' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
             }`}
           >
             <Calendar className="w-5 h-5" />
@@ -105,7 +105,7 @@ export default function Home() {
           
           <div className="mt-4">
             {sidebarOpen && (
-              <div className="text-xs uppercase text-gray-500 font-semibold mb-2">Records</div>
+              <div className="text-xs uppercase text-gray-500 dark:text-gray-400 font-semibold mb-2">Records</div>
             )}
             {recordTypes.map(type => (
               <button
@@ -132,7 +132,7 @@ export default function Home() {
           <div className="mt-6 pt-6 border-t">
             <button
               onClick={() => setView('new-type')}
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors"
             >
               <Database className="w-5 h-5" />
               {sidebarOpen && <span>New Record Type</span>}
@@ -148,9 +148,9 @@ export default function Home() {
         )}
         
         {view === 'records' && selectedRecordType && (
-          <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">{selectedRecordType.display_name} Records</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{selectedRecordType.display_name} Records</h2>
               <button
                 onClick={() => {
                   setSelectedRecord(null);
@@ -164,25 +164,25 @@ export default function Home() {
             </div>
             
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full text-gray-900 dark:text-gray-100">
                 <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2 px-4">ID</th>
-                    <th className="text-left py-2 px-4">Details</th>
-                    <th className="text-left py-2 px-4">Created</th>
-                    <th className="text-left py-2 px-4">Actions</th>
+                  <tr className="border-b dark:border-gray-700">
+                    <th className="text-left py-2 px-4 text-gray-700 dark:text-gray-300">ID</th>
+                    <th className="text-left py-2 px-4 text-gray-700 dark:text-gray-300">Details</th>
+                    <th className="text-left py-2 px-4 text-gray-700 dark:text-gray-300">Created</th>
+                    <th className="text-left py-2 px-4 text-gray-700 dark:text-gray-300">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {records.map(record => (
-                    <tr key={record.id} className="border-b hover:bg-gray-50">
-                      <td className="py-2 px-4 text-sm">{record.id}</td>
-                      <td className="py-2 px-4 text-sm">
+                    <tr key={record.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="py-2 px-4 text-sm text-gray-900 dark:text-gray-100">{record.id}</td>
+                      <td className="py-2 px-4 text-sm text-gray-900 dark:text-gray-100">
                         {record.first_name && record.last_name
                           ? `${record.first_name} ${record.last_name}`
                           : record.title || record.name || 'N/A'}
                       </td>
-                      <td className="py-2 px-4 text-sm text-gray-500">
+                      <td className="py-2 px-4 text-sm text-gray-500 dark:text-gray-400">
                         {new Date(record.created_at).toLocaleDateString()}
                       </td>
                       <td className="py-2 px-4">
@@ -191,7 +191,7 @@ export default function Home() {
                             setSelectedRecord(record);
                             setView('new-record');
                           }}
-                          className="text-blue-600 hover:text-blue-800 text-sm"
+                          className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm"
                         >
                           Edit
                         </button>
@@ -202,7 +202,7 @@ export default function Home() {
               </table>
               
               {records.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                   No {selectedRecordType.display_name.toLowerCase()} records found
                 </div>
               )}

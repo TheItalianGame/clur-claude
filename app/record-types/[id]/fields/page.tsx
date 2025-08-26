@@ -294,6 +294,25 @@ export default function RecordTypeFieldsPage() {
                 </div>
               )}
               
+              {(newField.field_type === 'date' || newField.field_type === 'datetime') && (
+                <div className="col-span-2">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={newField.show_on_calendar || false}
+                      onChange={(e) => setNewField({ ...newField, show_on_calendar: e.target.checked })}
+                      className="w-4 h-4 text-blue-600 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Show on Calendar
+                    </span>
+                  </label>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6">
+                    Display records on the calendar using this date field
+                  </p>
+                </div>
+              )}
+              
               {newField.field_type === 'relation' && (
                 <div className="col-span-2">
                   <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
@@ -381,6 +400,8 @@ export default function RecordTypeFieldsPage() {
                     {field.field_name} • {field.field_type}
                     {field.is_required && ' • Required'}
                     {field.default_value && ` • Default: ${field.default_value}`}
+                    {field.show_on_calendar && ' • Shows on Calendar'}
+                    {field.show_in_employee_calendar && ' • Employee Calendar'}
                   </div>
                 </div>
                 {!field.is_system && (

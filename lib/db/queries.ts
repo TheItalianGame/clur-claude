@@ -141,10 +141,18 @@ export const calendarQueries = {
     recordTypes.forEach(recordType => {
       const settings = db.prepare('SELECT * FROM calendar_settings WHERE record_type_id = ?').get(recordType.id) as CalendarSettings;
       
-      if (settings && settings.show_on_calendar) {
+      // Get all date/datetime fields (filter will decide what to show)
+      const calendarDateFields = db.prepare(`
+        SELECT field_name, display_name, show_on_calendar 
+        FROM field_definitions 
+        WHERE record_type_id = ? 
+        AND field_type IN ('date', 'datetime')
+      `).all(recordType.id) as Array<{field_name: string, display_name: string, show_on_calendar: number}>;
+      
+      if ((settings && settings.show_on_calendar) || calendarDateFields.length > 0) {
         let records: any[] = [];
         
-        // Get records based on whether it's a system or custom type
+        // Get all records for this type
         if (recordType.is_system) {
           // System tables - directly query the table
           const tableName = recordType.name === 'employee' ? 'employees' :
@@ -153,33 +161,25 @@ export const calendarQueries = {
                            recordType.name === 'meeting' ? 'meetings' : null;
           
           if (tableName) {
-            const dateColumn = settings.date_field;
-            records = db.prepare(`
-              SELECT * FROM ${tableName}
-              WHERE DATE(${dateColumn}) >= DATE(?)
-              AND DATE(${dateColumn}) <= DATE(?)
-            `).all(startDate, endDate) as any[];
+            // Get all records, we'll filter by date fields later
+            records = db.prepare(`SELECT * FROM ${tableName}`).all() as any[];
           }
         } else {
           // Custom records - query dynamic_records table
           records = db.prepare(`
             SELECT * FROM dynamic_records 
-            WHERE record_type_id = ? 
-            AND DATE(json_extract(data, '$.${settings.date_field}')) >= DATE(?)
-            AND DATE(json_extract(data, '$.${settings.date_field}')) <= DATE(?)
-          `).all(recordType.id, startDate, endDate) as any[];
+            WHERE record_type_id = ?
+          `).all(recordType.id) as any[];
         }
         
         records.forEach(record => {
           let eventData: any;
           let eventTitle: string;
-          let eventDate: Date;
           let isRelevantToEmployee = true;
           
           if (recordType.is_system) {
             eventData = record;
-            eventTitle = record[settings.title_field] || recordType.display_name;
-            eventDate = new Date(record[settings.date_field]);
+            eventTitle = record[settings?.title_field] || recordType.display_name;
             
             // Check employee relevance for system records
             if (employeeId) {
@@ -206,8 +206,7 @@ export const calendarQueries = {
           } else {
             const data = JSON.parse(record.data);
             eventData = data;
-            eventTitle = data[settings.title_field] || recordType.display_name;
-            eventDate = new Date(data[settings.date_field]);
+            eventTitle = data[settings?.title_field] || recordType.display_name;
             
             // Check employee relevance for custom records
             if (employeeId) {
@@ -245,15 +244,58 @@ export const calendarQueries = {
           }
           
           if (isRelevantToEmployee) {
-            events.push({
-              id: record.id,
-              title: eventTitle,
-              date: eventDate,
-              color: recordType.color,
-              recordType: recordType.name,
-              recordTypeDisplay: recordType.display_name,
-              data: eventData
-            });
+            // Special handling for meetings - combine start_time and end_time into one event
+            if (recordType.name === 'meeting' && record.start_time) {
+              const eventDate = new Date(record.start_time);
+              
+              // Check if date is within range
+              if (eventDate >= new Date(startDate) && eventDate <= new Date(endDate)) {
+                events.push({
+                  id: `${record.id}-start_time`,
+                  recordId: record.id,
+                  title: eventTitle,
+                  date: eventDate,
+                  dateField: 'start_time',
+                  dateFieldDisplay: 'Start Time',
+                  color: recordType.color,
+                  recordType: recordType.id,
+                  recordTypeDisplay: recordType.display_name,
+                  data: eventData  // This includes end_time field
+                });
+              }
+            } else {
+              // Create an event for each date field that should show on calendar
+              calendarDateFields.forEach(dateField => {
+                let dateValue: any;
+                
+                if (recordType.is_system) {
+                  dateValue = record[dateField.field_name];
+                } else {
+                  const data = JSON.parse(record.data);
+                  dateValue = data[dateField.field_name];
+                }
+                
+                if (dateValue) {
+                  const eventDate = new Date(dateValue);
+                  
+                  // Check if date is within range
+                  if (eventDate >= new Date(startDate) && eventDate <= new Date(endDate)) {
+                    events.push({
+                      id: `${record.id}-${dateField.field_name}`,
+                      recordId: record.id,
+                      title: eventTitle,
+                      date: eventDate,
+                      dateField: dateField.field_name,
+                      dateFieldDisplay: dateField.display_name,
+                      color: recordType.color,
+                      recordType: recordType.id,  // Use ID for filtering
+                      recordTypeDisplay: recordType.display_name,
+                      data: eventData
+                    });
+                  }
+                }
+              });
+            }
           }
         });
       }

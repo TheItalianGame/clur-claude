@@ -52,7 +52,7 @@ export default function ViewRecordPage() {
         const fieldsData = await fieldsResponse.json();
         setFields(fieldsData);
         
-        // Fetch related data for relation fields
+        // Fetch related data for relation and multiselect fields
         for (const field of fieldsData) {
           if (field.field_type === 'relation' && data[field.field_name]) {
             let relatedType = null;
@@ -72,6 +72,24 @@ export default function ViewRecordPage() {
               if (relatedResponse.ok) {
                 const relatedRecord = await relatedResponse.json();
                 setRelatedData(prev => ({ ...prev, [field.field_name]: relatedRecord }));
+              }
+            }
+          } else if (field.field_type === 'multiselect' && field.options && field.options.includes('record_type')) {
+            // Fetch all records for multiselect relation fields
+            let relatedType = null;
+            try {
+              const options = JSON.parse(field.options);
+              relatedType = options.record_type;
+            } catch (e) {
+              // Fallback to field name detection
+              if (field.field_name.includes('attendees') || field.field_name.includes('participants')) relatedType = 'employee';
+            }
+            
+            if (relatedType) {
+              const relatedResponse = await fetch(`/api/records/${relatedType}`);
+              if (relatedResponse.ok) {
+                const relatedRecords = await relatedResponse.json();
+                setRelatedData(prev => ({ ...prev, [field.field_name]: relatedRecords }));
               }
             }
           }
@@ -132,6 +150,27 @@ export default function ViewRecordPage() {
         return value;
       case 'multiselect':
         if (Array.isArray(value)) {
+          // Check if this is a relation multiselect (employees, etc.)
+          const isRelation = field.options && field.options.includes('record_type');
+          
+          if (isRelation) {
+            // Try to get names from relatedData
+            const names = value.map(id => {
+              const records = relatedData[field.field_name];
+              if (Array.isArray(records)) {
+                const record = records.find((r: any) => r.id === id);
+                if (record) {
+                  if (record.first_name && record.last_name) {
+                    return `${record.first_name} ${record.last_name}`;
+                  }
+                  return record.name || record.title || id;
+                }
+              }
+              return id;
+            });
+            return names.join(', ');
+          }
+          
           return value.join(', ');
         }
         return value;
@@ -255,6 +294,45 @@ export default function ViewRecordPage() {
                     {field.field_type === 'textarea' ? (
                       <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg whitespace-pre-wrap">
                         {formatFieldValue(field, recordData[field.field_name])}
+                      </div>
+                    ) : field.field_type === 'multiselect' && Array.isArray(recordData[field.field_name]) ? (
+                      <div className="flex flex-wrap gap-2 py-2">
+                        {(() => {
+                          const value = recordData[field.field_name];
+                          const isRelation = field.options && field.options.includes('record_type');
+                          
+                          if (isRelation) {
+                            return value.map((id: string) => {
+                              const records = relatedData[field.field_name];
+                              let label = id;
+                              if (Array.isArray(records)) {
+                                const record = records.find((r: any) => r.id === id);
+                                if (record) {
+                                  label = record.first_name && record.last_name 
+                                    ? `${record.first_name} ${record.last_name}`
+                                    : record.name || record.title || id;
+                                }
+                              }
+                              return (
+                                <span
+                                  key={id}
+                                  className="inline-flex items-center px-3 py-1 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-full text-sm"
+                                >
+                                  {label}
+                                </span>
+                              );
+                            });
+                          } else {
+                            return value.map((item: string) => (
+                              <span
+                                key={item}
+                                className="inline-flex items-center px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-sm"
+                              >
+                                {item}
+                              </span>
+                            ));
+                          }
+                        })()}
                       </div>
                     ) : (
                       <div className="py-2">

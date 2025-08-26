@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { FieldDefinition, RecordType, FormDefinition } from '@/lib/types';
 import { Save, X, Layout } from 'lucide-react';
 import { generateDefaultFormLayout } from '@/lib/form-templates';
+import SearchableMultiSelect from '@/components/ui/SearchableMultiSelect';
 
 interface DynamicFormProps {
   recordType: RecordType;
@@ -141,16 +142,38 @@ export default function DynamicForm({ recordType, initialData, formId, onSave, o
 
   const renderField = (field: FieldDefinition) => {
     const value = formData[field.field_name] || '';
+    const isReadOnly = field.read_only || field.field_name === 'created_at' || field.field_name === 'updated_at';
+    
+    // Format datetime values for display
+    const formatDateTimeValue = (val: any, type: string) => {
+      if (!val) return '';
+      if (type === 'datetime' || type === 'date') {
+        const date = new Date(val);
+        if (type === 'datetime') {
+          return date.toISOString().slice(0, 16); // Format for datetime-local input
+        }
+        return date.toISOString().slice(0, 10); // Format for date input
+      }
+      return val;
+    };
+    
+    const displayValue = formatDateTimeValue(value, field.field_type);
     
     switch (field.field_type) {
       case 'text':
         return (
           <input
             type="text"
-            value={value}
-            onChange={(e) => handleFieldChange(field.field_name, e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required={field.is_required}
+            value={displayValue}
+            onChange={(e) => !isReadOnly && handleFieldChange(field.field_name, e.target.value)}
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none ${
+              isReadOnly 
+                ? 'bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 cursor-not-allowed' 
+                : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:ring-2 focus:ring-blue-500'
+            }`}
+            required={field.is_required && !isReadOnly}
+            readOnly={isReadOnly}
+            disabled={isReadOnly}
           />
         );
       
@@ -180,10 +203,16 @@ export default function DynamicForm({ recordType, initialData, formId, onSave, o
         return (
           <input
             type="date"
-            value={value}
-            onChange={(e) => handleFieldChange(field.field_name, e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required={field.is_required}
+            value={displayValue}
+            onChange={(e) => !isReadOnly && handleFieldChange(field.field_name, e.target.value)}
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none ${
+              isReadOnly 
+                ? 'bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 cursor-not-allowed' 
+                : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:ring-2 focus:ring-blue-500'
+            }`}
+            required={field.is_required && !isReadOnly}
+            readOnly={isReadOnly}
+            disabled={isReadOnly}
           />
         );
       
@@ -191,10 +220,16 @@ export default function DynamicForm({ recordType, initialData, formId, onSave, o
         return (
           <input
             type="datetime-local"
-            value={value}
-            onChange={(e) => handleFieldChange(field.field_name, e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required={field.is_required}
+            value={displayValue}
+            onChange={(e) => !isReadOnly && handleFieldChange(field.field_name, e.target.value)}
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none ${
+              isReadOnly 
+                ? 'bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 cursor-not-allowed' 
+                : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:ring-2 focus:ring-blue-500'
+            }`}
+            required={field.is_required && !isReadOnly}
+            readOnly={isReadOnly}
+            disabled={isReadOnly}
           />
         );
       
@@ -254,71 +289,30 @@ export default function DynamicForm({ recordType, initialData, formId, onSave, o
         // Check if this is a relation multiselect (for employees, etc.)
         const isRelation = field.options && field.options.includes('record_type');
         
-        if (isRelation && multiOptions.length > 0) {
-          // Render as employee/relation multiselect
-          return (
-            <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-2 max-h-40 overflow-y-auto">
-              {multiOptions.map((record: any) => {
-                const recordId = record.id;
-                const recordLabel = record.first_name && record.last_name 
-                  ? `${record.first_name} ${record.last_name}`
-                  : record.name || record.title || record.id;
-                
-                return (
-                  <label key={recordId} className="flex items-center gap-2 p-1 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={selectedValues.includes(recordId)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          handleFieldChange(field.field_name, [...selectedValues, recordId]);
-                        } else {
-                          handleFieldChange(field.field_name, selectedValues.filter((v: string) => v !== recordId));
-                        }
-                      }}
-                      className="w-4 h-4"
-                    />
-                    <span className="text-sm">{recordLabel}</span>
-                  </label>
-                );
-              })}
-            </div>
-          );
-        } else if (Array.isArray(multiOptions)) {
-          // Render as regular multiselect with custom options
-          return (
-            <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-2 max-h-40 overflow-y-auto">
-              {multiOptions.map((opt: string | { value: string, label: string }) => {
-                const optValue = typeof opt === 'string' ? opt : opt.value;
-                const optLabel = typeof opt === 'string' ? opt : opt.label;
-                return (
-                  <label key={optValue} className="flex items-center gap-2 p-1 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={selectedValues.includes(optValue)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          handleFieldChange(field.field_name, [...selectedValues, optValue]);
-                        } else {
-                          handleFieldChange(field.field_name, selectedValues.filter((v: string) => v !== optValue));
-                        }
-                      }}
-                      className="w-4 h-4"
-                    />
-                    <span className="text-sm">{optLabel}</span>
-                  </label>
-                );
-              })}
-            </div>
-          );
-        } else {
-          // Fallback to empty state
-          return (
-            <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-2 text-gray-500 text-sm">
-              No options available
-            </div>
-          );
-        };
+        // Convert options to the format expected by SearchableMultiSelect
+        const formattedOptions = isRelation && multiOptions.length > 0
+          ? multiOptions.map((record: any) => ({
+              id: record.id,
+              label: record.first_name && record.last_name 
+                ? `${record.first_name} ${record.last_name}`
+                : record.name || record.title || record.id,
+              sublabel: record.email || record.role || undefined
+            }))
+          : multiOptions.map((opt: string | { value: string, label: string }) => ({
+              id: typeof opt === 'string' ? opt : opt.value,
+              label: typeof opt === 'string' ? opt : opt.label
+            }));
+        
+        return (
+          <SearchableMultiSelect
+            options={formattedOptions}
+            value={selectedValues}
+            onChange={(newValue) => handleFieldChange(field.field_name, newValue)}
+            placeholder={`Select ${field.display_name}...`}
+            required={field.is_required}
+            disabled={isReadOnly}
+          />
+        );
       
       case 'relation':
         const relatedRecords = relatedData[field.field_name] || [];

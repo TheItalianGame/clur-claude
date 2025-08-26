@@ -66,7 +66,7 @@ export default function Sidebar() {
   const isActive = (path: string) => pathname === path;
 
   return (
-    <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-screen overflow-y-auto">
+    <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-screen overflow-y-auto" style={{ position: 'relative', zIndex: 5 }}>
       <div className="p-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
           CLUR
